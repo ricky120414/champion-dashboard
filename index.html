@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Dealing PT BMI 2025</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #1F4E78;
+            --primary-light: #2E5C87;
+            --accent: #4472C4;
+            --success: #28A745;
+            --success-light: #D4EDDA;
+            --warning: #FFC107;
+            --warning-light: #FFF3CD;
+            --danger: #DC3545;
+            --danger-light: #F8D7DA;
+            --purple: #6F42C1;
+            --bg-white: #FFFFFF;
+            --bg-light: #F8F9FA;
+            --bg-card: #FFFFFF;
+            --border: #DEE2E6;
+            --border-light: #E9ECEF;
+            --text-dark: #212529;
+            --text-secondary: #6C757D;
+            --text-muted: #ADB5BD;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-light); color: var(--text-dark); min-height: 100vh; }
+        
+        .header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); padding: 20px 40px; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-lg); }
+        .header-content { max-width: 1800px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .logo-section { display: flex; align-items: center; gap: 16px; }
+        .logo-icon { width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .logo-text h1 { font-size: 1.5rem; font-weight: 700; color: #fff; }
+        .logo-text p { font-size: 0.75rem; color: rgba(255,255,255,0.8); letter-spacing: 1px; }
+        .header-info { display: flex; align-items: center; gap: 20px; }
+        .live-badge { display: flex; align-items: center; gap: 8px; background: rgba(40,167,69,0.2); border: 1px solid var(--success); padding: 8px 16px; border-radius: 100px; font-size: 0.85rem; color: #fff; }
+        .live-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        #currentDate { font-size: 0.9rem; color: rgba(255,255,255,0.9); }
+
+        .nav-tabs { background: var(--bg-white); border-bottom: 1px solid var(--border); padding: 0 40px; overflow-x: auto; box-shadow: var(--shadow); }
+        .nav-tabs-inner { max-width: 1800px; margin: 0 auto; display: flex; gap: 4px; }
+        .nav-tab { padding: 16px 24px; font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); background: transparent; border: none; cursor: pointer; transition: all 0.3s; border-bottom: 3px solid transparent; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+        .nav-tab:hover { color: var(--primary); background: var(--bg-light); }
+        .nav-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(31,78,120,0.05); }
+
+        .main-container { max-width: 1800px; margin: 0 auto; padding: 30px 40px; }
+        
+        .filter-section { background: var(--bg-white); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end; box-shadow: var(--shadow); }
+        .filter-group { display: flex; flex-direction: column; gap: 6px; }
+        .filter-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .filter-select { background: var(--bg-white); border: 2px solid var(--border); color: var(--text-dark); padding: 10px 16px; border-radius: 8px; font-size: 0.9rem; min-width: 160px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+        .filter-select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(31,78,120,0.1); }
+        .filter-reset { background: var(--bg-light); border: 2px solid var(--border); color: var(--text-secondary); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 600; margin-left: auto; transition: all 0.2s; }
+        .filter-reset:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-light); }
+
+        .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; z-index: 9999; flex-direction: column; gap: 16px; }
+        .loading-spinner { width: 50px; height: 50px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { font-size: 1rem; color: var(--text-secondary); }
+
+        .tab-content { display: none; animation: fadeIn 0.4s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 24px; }
+        .kpi-card { background: var(--bg-white); border: 1px solid var(--border); border-radius: 12px; padding: 20px; position: relative; overflow: hidden; transition: all 0.3s; box-shadow: var(--shadow); }
+        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--primary); }
+        .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        .kpi-card.success::before { background: var(--success); }
+        .kpi-card.warning::before { background: var(--warning); }
+        .kpi-card.danger::before { background: var(--danger); }
+        .kpi-card.purple::before { background: var(--purple); }
+        .kpi-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 12px; background: rgba(31,78,120,0.1); }
+        .kpi-card.success .kpi-icon { background: var(--success-light); }
+        .kpi-card.warning .kpi-icon { background: var(--warning-light); }
+        .kpi-card.danger .kpi-icon { background: var(--danger-light); }
+        .kpi-card.purple .kpi-icon { background: rgba(111,66,193,0.1); }
+        .kpi-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600; }
+        .kpi-value { font-size: 1.75rem; font-weight: 800; color: var(--text-dark); margin-bottom: 4px; }
+        .kpi-change { font-size: 0.8rem; color: var(--text-secondary); }
+        .kpi-change.positive { color: var(--success); }
+        .kpi-change.negative { color: var(--danger); }
+
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 24px; margin-bottom: 24px; }
+        .chart-card { background: var(--bg-white); border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); }
+        .chart-card.full-width { grid-column: 1 / -1; }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-light); }
+        .chart-title { font-size: 1rem; font-weight: 700; color: var(--text-dark); }
+        .chart-subtitle { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+        .chart-container { position: relative; height: 280px; }
+        .chart-container.small { height: 240px; }
+
+        .table-card { background: var(--bg-white); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 24px; box-shadow: var(--shadow); }
+        .table-header { padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--bg-light); }
+        .table-title { font-size: 1rem; font-weight: 700; color: var(--text-dark); }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: var(--primary); padding: 12px 16px; text-align: left; font-size: 0.75rem; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+        td { padding: 12px 16px; border-bottom: 1px solid var(--border-light); font-size: 0.875rem; color: var(--text-dark); }
+        tr:hover td { background: var(--bg-light); }
+        tr:last-child td { border-bottom: none; }
+
+        .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 100px; font-size: 0.75rem; font-weight: 600; }
+        .status-badge.lunas { background: var(--success-light); color: var(--success); }
+        .status-badge.pending { background: var(--warning-light); color: #856404; }
+        .status-badge.cancel { background: var(--danger-light); color: var(--danger); }
+
+        .rank-badge { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; }
+        .rank-1 { background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; }
+        .rank-2 { background: linear-gradient(135deg, #C0C0C0, #A0A0A0); color: #000; }
+        .rank-3 { background: linear-gradient(135deg, #CD7F32, #8B4513); color: #fff; }
+        .rank-default { background: var(--bg-light); color: var(--text-secondary); border: 1px solid var(--border); }
+
+        .progress-bar { height: 8px; background: var(--bg-light); border-radius: 4px; overflow: hidden; border: 1px solid var(--border-light); }
+        .progress-fill { height: 100%; border-radius: 4px; }
+        .progress-fill.blue { background: var(--primary); }
+        .progress-fill.green { background: var(--success); }
+        .progress-fill.yellow { background: var(--warning); }
+        .progress-fill.red { background: var(--danger); }
+
+        .alerts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 24px; }
+        .alert-card { background: var(--bg-white); border: 1px solid var(--border); border-radius: 12px; padding: 16px; border-left: 4px solid var(--warning); box-shadow: var(--shadow); }
+        .alert-card.danger { border-left-color: var(--danger); }
+        .alert-card.success { border-left-color: var(--success); }
+        .alert-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border-light); }
+        .alert-icon { font-size: 1.25rem; }
+        .alert-title { font-weight: 700; font-size: 0.9rem; color: var(--text-dark); }
+        .alert-count { background: var(--danger); color: white; padding: 2px 8px; border-radius: 100px; font-size: 0.75rem; font-weight: 700; margin-left: auto; }
+        .alert-list { max-height: 200px; overflow-y: auto; }
+        .alert-item { padding: 10px 12px; background: var(--bg-light); border-radius: 6px; margin-bottom: 6px; font-size: 0.8rem; border-left: 3px solid var(--border); }
+        .alert-item:last-child { margin-bottom: 0; }
+        .alert-item.lunas { border-left-color: var(--success); background: var(--success-light); }
+
+        .score-display { display: flex; align-items: center; gap: 8px; }
+        .score-value { font-weight: 700; font-size: 0.95rem; min-width: 30px; }
+        .score-bar { flex: 1; height: 6px; background: var(--bg-light); border-radius: 3px; overflow: hidden; min-width: 50px; border: 1px solid var(--border-light); }
+        .score-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 3px; }
+
+        .no-data { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; }
+
+        @media (max-width: 992px) { .charts-grid { grid-template-columns: 1fr; } .alerts-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .main-container { padding: 16px; } .header { padding: 16px 20px; } .nav-tabs { padding: 0 16px; } .filter-section { flex-direction: column; } .filter-reset { margin-left: 0; width: 100%; } }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-light); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Memuat data dari Google Sheets...</div>
+    </div>
+
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo-icon">📊</div>
+                <div class="logo-text">
+                    <h1>Dashboard Dealing</h1>
+                    <p>PT Berjaya Makmursukses Indotama</p>
+                </div>
+            </div>
+            <div class="header-info">
+                <div class="live-badge"><span class="live-dot"></span><span>Live Data</span></div>
+                <div id="currentDate"></div>
+            </div>
+        </div>
+    </header>
+
+    <nav class="nav-tabs">
+        <div class="nav-tabs-inner">
+            <button class="nav-tab active" data-tab="summary"><span>📊</span> Summary</button>
+            <button class="nav-tab" data-tab="ae"><span>👥</span> Dashboard AE</button>
+            <button class="nav-tab" data-tab="channel"><span>🌐</span> Channel</button>
+            <button class="nav-tab" data-tab="brand"><span>🏷️</span> Brand</button>
+            <button class="nav-tab" data-tab="velocity"><span>⚡</span> Velocity</button>
+            <button class="nav-tab" data-tab="forecast"><span>📈</span> Forecast</button>
+        </div>
+    </nav>
+
+    <main class="main-container">
+        <div class="filter-section">
+            <div class="filter-group">
+                <label class="filter-label">Periode</label>
+                <select class="filter-select" id="filterPeriode" onchange="applyFilters()">
+                    <option value="all">Semua 2025</option>
+                    <option value="q1">Q1 (Jan-Mar)</option>
+                    <option value="q2">Q2 (Apr-Jun)</option>
+                    <option value="q3">Q3 (Jul-Sep)</option>
+                    <option value="q4">Q4 (Okt-Des)</option>
+                    <option value="1">Januari</option>
+                    <option value="2">Februari</option>
+                    <option value="3">Maret</option>
+                    <option value="4">April</option>
+                    <option value="5">Mei</option>
+                    <option value="6">Juni</option>
+                    <option value="7">Juli</option>
+                    <option value="8">Agustus</option>
+                    <option value="9">September</option>
+                    <option value="10">Oktober</option>
+                    <option value="11">November</option>
+                    <option value="12">Desember</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Status</label>
+                <select class="filter-select" id="filterStatus" onchange="applyFilters()">
+                    <option value="all">Semua Status</option>
+                    <option value="LUNAS">Lunas</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="CANCEL">Cancel</option>
+                    <option value="REFUND">Refund</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Account Executive</label>
+                <select class="filter-select" id="filterAE" onchange="applyFilters()">
+                    <option value="all">Semua AE</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Brand</label>
+                <select class="filter-select" id="filterBrand" onchange="applyFilters()">
+                    <option value="all">Semua Brand</option>
+                </select>
+            </div>
+            <button class="filter-reset" onclick="resetFilters()">🔄 Reset Filter</button>
+        </div>
+
+        <!-- TAB: SUMMARY -->
+        <div class="tab-content active" id="tab-summary">
+            <div class="kpi-grid" id="kpiGrid"></div>
+            <div class="charts-grid">
+                <div class="chart-card full-width">
+                    <div class="chart-header"><div><div class="chart-title">📈 Trend Dealing vs DO per Bulan</div><div class="chart-subtitle">Perbandingan jumlah dealing dan DO setiap bulan</div></div></div>
+                    <div class="chart-container"><canvas id="chartTrend"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header"><div><div class="chart-title">🎯 Status Distribution</div><div class="chart-subtitle">Breakdown status dealing</div></div></div>
+                    <div class="chart-container small"><canvas id="chartStatus"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header"><div><div class="chart-title">💵 Omset per Bulan</div><div class="chart-subtitle">Total omset realisasi bulanan (Juta Rupiah)</div></div></div>
+                    <div class="chart-container small"><canvas id="chartOmset"></canvas></div>
+                </div>
+            </div>
+            <div class="alerts-grid">
+                <div class="alert-card danger">
+                    <div class="alert-header"><span class="alert-icon">🔴</span><span class="alert-title">Dealing At Risk (>21 hari)</span><span class="alert-count" id="riskCount">0</span></div>
+                    <div class="alert-list" id="riskList"><div class="no-data">Tidak ada dealing at risk</div></div>
+                </div>
+                <div class="alert-card">
+                    <div class="alert-header"><span class="alert-icon">🔥</span><span class="alert-title">Hot Deals (Target Bulan Ini)</span><span class="alert-count" style="background:var(--warning);" id="hotCount">0</span></div>
+                    <div class="alert-list" id="hotList"><div class="no-data">Tidak ada hot deals</div></div>
+                </div>
+            </div>
+            <div class="table-card">
+                <div class="table-header"><div class="table-title">🏆 Top 10 Account Executive by Omset</div></div>
+                <div class="table-wrapper"><table><thead><tr><th>Rank</th><th>Nama AE</th><th>Dealing</th><th>DO</th><th>Total Omset</th><th>Conv Rate</th></tr></thead><tbody id="topAETable"></tbody></table></div>
+            </div>
+        </div>
+
+        <!-- TAB: DASHBOARD AE -->
+        <div class="tab-content" id="tab-ae">
+            <div class="table-card">
+                <div class="table-header"><div class="table-title">🏆 Ranking Account Executive</div></div>
+                <div class="table-wrapper"><table><thead><tr><th>Rank</th><th>Nama AE</th><th>Dealing</th><th>DO</th><th>Omset</th><th>Conv Rate</th><th>Score</th></tr></thead><tbody id="aeRankingTable"></tbody></table></div>
+            </div>
+            <div class="charts-grid">
+                <div class="chart-card"><div class="chart-header"><div><div class="chart-title">📊 Dealing per AE</div></div></div><div class="chart-container"><canvas id="chartAEDealing"></canvas></div></div>
+                <div class="chart-card"><div class="chart-header"><div><div class="chart-title">💰 Omset per AE</div></div></div><div class="chart-container"><canvas id="chartAEOmset"></canvas></div></div>
+            </div>
+        </div>
+
+        <!-- TAB: CHANNEL -->
+        <div class="tab-content" id="tab-channel">
+            <div class="kpi-grid" id="channelKPI"></div>
+            <div class="charts-grid">
+                <div class="chart-card"><div class="chart-header"><div><div class="chart-title">🌐 Channel Distribution</div></div></div><div class="chart-container"><canvas id="chartChannel"></canvas></div></div>
+                <div class="chart-card"><div class="chart-header"><div><div class="chart-title">💵 Dana Kuncian vs Komitmen</div></div></div><div class="chart-container"><canvas id="chartDanaType"></canvas></div></div>
+            </div>
+            <div class="table-card">
+                <div class="table-header"><div class="table-title">📱 Performance per Channel</div></div>
+                <div class="table-wrapper"><table><thead><tr><th>Marketer</th><th>Dealing</th><th>DO</th><th>Conv Rate</th><th>Omset</th></tr></thead><tbody id="dmTable"></tbody></table></div>
+            </div>
+        </div>
+
+        <!-- TAB: BRAND -->
+        <div class="tab-content" id="tab-brand">
+            <div class="kpi-grid" id="brandKPI"></div>
+            <div class="charts-grid">
+                <div class="chart-card"><div class="chart-header"><div><div class="chart-title">🏷️ Dealing per Brand</div></div></div><div class="chart-container"><canvas id="chartBrandDealing"></canvas></div></div>
+                <div class="chart-card"><div class="chart-header"><div><div class="chart-title">💰 Omset per Brand</div></div></div><div class="chart-container"><canvas id="chartBrandOmset"></canvas></div></div>
+            </div>
+            <div class="table-card">
+                <div class="table-header"><div class="table-title">📊 Brand Performance Detail</div></div>
+                <div class="table-wrapper"><table><thead><tr><th>Brand</th><th>Dealing</th><th>DO</th><th>Conv Rate</th><th>Omset</th><th>Avg Deal</th></tr></thead><tbody id="brandTable"></tbody></table></div>
+            </div>
+        </div>
+
+        <!-- TAB: VELOCITY -->
+        <div class="tab-content" id="tab-velocity">
+            <div class="kpi-grid" id="velocityKPI"></div>
+            <div class="charts-grid">
+                <div class="chart-card"><div class="chart-header"><div><div class="chart-title">⏳ Dealing Aging Distribution (PENDING)</div></div></div><div class="chart-container"><canvas id="chartAging"></canvas></div></div>
+                <div class="chart-card"><div class="chart-header"><div><div class="chart-title">💵 Deal Size Distribution</div></div></div><div class="chart-container"><canvas id="chartDealSize"></canvas></div></div>
+            </div>
+            <div class="table-card">
+                <div class="table-header"><div class="table-title">⚡ Velocity per Account Executive</div></div>
+                <div class="table-wrapper"><table><thead><tr><th>AE</th><th>Avg Days</th><th>Fastest</th><th>Slowest</th><th>Performance</th></tr></thead><tbody id="velocityTable"></tbody></table></div>
+            </div>
+        </div>
+
+        <!-- TAB: FORECAST -->
+        <div class="tab-content" id="tab-forecast">
+            <div class="kpi-grid" id="forecastKPI"></div>
+            <div class="chart-card" style="margin-bottom:24px;">
+                <div class="chart-header"><div><div class="chart-title">🎯 Target vs Achievement per Bulan</div></div></div>
+                <div class="chart-container" style="height:320px;"><canvas id="chartGapTarget"></canvas></div>
+            </div>
+            <div class="charts-grid">
+                <div class="chart-card"><div class="chart-header"><div><div class="chart-title">🔥 Pipeline Analysis</div></div></div><div class="chart-container"><canvas id="chartPipeline"></canvas></div></div>
+                <div class="chart-card"><div class="chart-header"><div><div class="chart-title">📊 Conversion Rate Trend</div></div></div><div class="chart-container"><canvas id="chartConvTrend"></canvas></div></div>
+            </div>
+            <div class="table-card">
+                <div class="table-header"><div class="table-title">📅 Quarter Performance</div></div>
+                <div class="table-wrapper"><table><thead><tr><th>Quarter</th><th>Dealing</th><th>DO</th><th>Conv Rate</th><th>Omset</th><th>Target</th><th>Achievement</th></tr></thead><tbody id="quarterTable"></tbody></table></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ============================================
+        // GLOBAL VARIABLES
+        // ============================================
+        let RAW_DATA = [];
+        let FILTERED_DATA = [];
+        let CHARTS = {};
+        const MONTHS = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        const MONTH_TARGETS = [0,1000,1200,1400,1400,1800,1600,1600,1400,2000,1800,1800,0]; // Target per bulan dalam juta
+        const DM_LIST = ['PAMERAN','PRIBADI','TRIANA','OCHI','TEBE','IPES','ANAS','YADO'];
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDate();
+            initTabs();
+            loadDataFromGoogleSheets();
+        });
+
+        function updateDate() {
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('id-ID', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+        }
+
+        function initTabs() {
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+                });
+            });
+        }
+
+        // ============================================
+        // DATA LOADING - WILL BE REPLACED BY GOOGLE SHEETS
+        // ============================================
+        function loadDataFromGoogleSheets() {
+            // This will be called from Google Apps Script
+            // For now, using sample data structure
+            // When connected to GAS, this function will receive data via google.script.run
+            
+            if (typeof google !== 'undefined' && google.script) {
+                google.script.run
+                    .withSuccessHandler(onDataLoaded)
+                    .withFailureHandler(onDataError)
+                    .getSheetData();
+            } else {
+                // Fallback: Load sample data for testing
+                console.log('Google Apps Script not available, using sample data');
+                loadSampleData();
+            }
+        }
+
+        function loadSampleData() {
+            // Sample data based on CSV structure
+            RAW_DATA = [
+                {no:1,mitra:'Kristien Pilat',tanggalData:'10/11/24',status:'LUNAS',targetLunas:'',brand:'SELERA BAHARI',tanggalDealing:'10/11/24',komitmen:5000000,omset:152800000,ae:'UNTUNG',data:'PAMERAN',bulanDealing:11,bulanLunas:1,lagDealingDO:74},
+                {no:2,mitra:'HERNAWATI JUSRI',tanggalData:'04/01/25',status:'LUNAS',targetLunas:'',brand:'SELERA BAHARI',tanggalDealing:'04/01/25',komitmen:10000000,omset:98100000,ae:'RICKY',data:'PAMERAN',bulanDealing:1,bulanLunas:1,lagDealingDO:16},
+                {no:3,mitra:'Zulkipli Mahmud',tanggalData:'15/01/25',status:'CANCEL',targetLunas:'',brand:'SELERA SAMBAL',tanggalDealing:'20/01/25',komitmen:10000000,omset:10000000,ae:'AJENG',data:'TRIANA',bulanDealing:1,bulanLunas:null,lagDealingDO:null},
+                // Add more sample data...
+            ];
+            
+            // Simulate loading delay
+            setTimeout(() => {
+                onDataLoaded(RAW_DATA);
+            }, 1000);
+        }
+
+        function onDataLoaded(data) {
+            RAW_DATA = data;
+            FILTERED_DATA = [...RAW_DATA];
+            
+            populateFilterDropdowns();
+            applyFilters();
+            
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        function onDataError(error) {
+            console.error('Error loading data:', error);
+            document.getElementById('loadingOverlay').innerHTML = '<div style="text-align:center;"><div style="font-size:48px;margin-bottom:16px;">⚠️</div><div style="color:var(--danger);">Error loading data</div><div style="color:var(--text-muted);margin-top:8px;">'+error+'</div></div>';
+        }
+
+        // ============================================
+        // FILTER FUNCTIONS
+        // ============================================
+        function populateFilterDropdowns() {
+            // Populate AE dropdown
+            const aeSet = new Set(RAW_DATA.map(d => d.ae).filter(Boolean));
+            const aeSelect = document.getElementById('filterAE');
+            aeSelect.innerHTML = '<option value="all">Semua AE</option>';
+            [...aeSet].sort().forEach(ae => {
+                aeSelect.innerHTML += `<option value="${ae}">${ae}</option>`;
+            });
+
+            // Populate Brand dropdown
+            const brandSet = new Set(RAW_DATA.map(d => d.brand).filter(Boolean));
+            const brandSelect = document.getElementById('filterBrand');
+            brandSelect.innerHTML = '<option value="all">Semua Brand</option>';
+            [...brandSet].sort().forEach(brand => {
+                brandSelect.innerHTML += `<option value="${brand}">${brand}</option>`;
+            });
+        }
+
+        function applyFilters() {
+            const periode = document.getElementById('filterPeriode').value;
+            const status = document.getElementById('filterStatus').value;
+            const ae = document.getElementById('filterAE').value;
+            const brand = document.getElementById('filterBrand').value;
+
+            FILTERED_DATA = RAW_DATA.filter(row => {
+                // Filter by period
+                if (periode !== 'all') {
+                    const bulan = row.bulanDealing;
+                    if (periode === 'q1' && (bulan < 1 || bulan > 3)) return false;
+                    if (periode === 'q2' && (bulan < 4 || bulan > 6)) return false;
+                    if (periode === 'q3' && (bulan < 7 || bulan > 9)) return false;
+                    if (periode === 'q4' && (bulan < 10 || bulan > 12)) return false;
+                    if (!isNaN(parseInt(periode)) && bulan !== parseInt(periode)) return false;
+                }
+                
+                // Filter by status
+                if (status !== 'all' && row.status !== status) return false;
+                
+                // Filter by AE
+                if (ae !== 'all' && row.ae !== ae) return false;
+                
+                // Filter by Brand
+                if (brand !== 'all' && row.brand !== brand) return false;
+                
+                return true;
+            });
+
+            updateAllDashboards();
+        }
+
+        function resetFilters() {
+            document.getElementById('filterPeriode').value = 'all';
+            document.getElementById('filterStatus').value = 'all';
+            document.getElementById('filterAE').value = 'all';
+            document.getElementById('filterBrand').value = 'all';
+            applyFilters();
+        }
+
+        // ============================================
+        // UPDATE ALL DASHBOARDS
+        // ============================================
+        function updateAllDashboards() {
+            updateSummaryTab();
+            updateAETab();
+            updateChannelTab();
+            updateBrandTab();
+            updateVelocityTab();
+            updateForecastTab();
+        }
+
+        // ============================================
+        // HELPER FUNCTIONS
+        // ============================================
+        function formatRupiah(num) {
+    if (!num || isNaN(num)) return 'Rp 0';
+    return 'Rp ' + num.toLocaleString('id-ID');
+}
+
+        function getMonthFromDate(dateStr) {
+            if (!dateStr) return null;
+            const parts = dateStr.split('/');
+            if (parts.length >= 2) return parseInt(parts[1]);
+            return null;
+        }
+
+        function calcConvRate(dealing, doneDO) {
+            if (!dealing || dealing === 0) return 0;
+            return Math.round((doneDO / dealing) * 100);
+        }
+
+        function destroyChart(chartId) {
+            if (CHARTS[chartId]) {
+                CHARTS[chartId].destroy();
+                delete CHARTS[chartId];
+            }
+        }
+
+        // ============================================
+        // SUMMARY TAB
+        // ============================================
+        function updateSummaryTab() {
+            const totalDealing = FILTERED_DATA.length;
+            const lunasData = FILTERED_DATA.filter(d => d.status === 'LUNAS' || d.status === 'LUNAS PENARIK');
+            const totalDO = lunasData.length;
+            const totalOmset = lunasData.reduce((sum, d) => sum + (parseFloat(d.omset) || 0), 0);
+            const pendingData = FILTERED_DATA.filter(d => d.status === 'PENDING' || d.status === 'ON PROGRESS');
+            const totalPending = pendingData.length;
+            const cancelData = FILTERED_DATA.filter(d => d.status === 'CANCEL' || d.status === 'REFUND');
+            const totalCancel = cancelData.length;
+            const convRate = calcConvRate(totalDealing, totalDO);
+            // Hitung Hot Deals (target bulan ini)
+const currentMonth = new Date().getMonth() + 1;
+const hotDeals = FILTERED_DATA.filter(d => {
+    if (!d.targetLunas) return false;
+    const targetMonth = getMonthFromDate(d.targetLunas);
+    return targetMonth === currentMonth && d.status !== 'LUNAS' && d.status !== 'LUNAS PENARIK';
+});
+const hotDealsCount = hotDeals.length;
+const hotDealsTotal = hotDeals.reduce((sum, d) => sum + (parseFloat(d.omset) || parseFloat(d.komitmen) || 0), 0);
+
+            // Update KPI Cards
+            document.getElementById('kpiGrid').innerHTML = `
+                <div class="kpi-card"><div class="kpi-icon">📋</div><div class="kpi-label">Total Dealing</div><div class="kpi-value">${totalDealing}</div><div class="kpi-change">Semua dealing tercatat</div></div>
+                <div class="kpi-card success"><div class="kpi-icon">✅</div><div class="kpi-label">Total DO (Lunas)</div><div class="kpi-value">${totalDO}</div><div class="kpi-change positive">${convRate}% Conversion Rate</div></div>
+                <div class="kpi-card purple"><div class="kpi-icon">💰</div><div class="kpi-label">Total Omset</div><div class="kpi-value">${formatRupiah(totalOmset)}</div><div class="kpi-change">Omset realisasi</div></div>
+                <div class="kpi-card warning"><div class="kpi-icon">🔥</div><div class="kpi-label">Target Pelunasan</div><div class="kpi-value">${formatRupiah(hotDealsTotal)}</div><div class="kpi-change">${hotDealsCount} Hot Deals bulan ini</div></div>
+                <div class="kpi-card danger"><div class="kpi-icon">❌</div><div class="kpi-label">Cancel/Refund</div><div class="kpi-value">${totalCancel}</div><div class="kpi-change negative">${totalDealing > 0 ? Math.round(totalCancel/totalDealing*100) : 0}% dari total</div></div>
+            `;
+
+            // Update Charts
+            updateTrendChart();
+            updateStatusChart();
+            updateOmsetChart();
+            
+            // Update Alerts
+            updateAlerts();
+            
+            // Update Top AE Table
+            updateTopAETable();
+        }
+
+        function updateTrendChart() {
+            const monthlyData = {};
+            for (let i = 1; i <= 12; i++) {
+                monthlyData[i] = { dealing: 0, do: 0 };
+            }
+            
+            FILTERED_DATA.forEach(d => {
+                const bulan = d.bulanDealing;
+                if (bulan >= 1 && bulan <= 12) {
+                    monthlyData[bulan].dealing++;
+                    if (d.status === 'LUNAS' || d.status === 'LUNAS PENARIK') {
+                        monthlyData[bulan].do++;
+                    }
+                }
+            });
+
+            destroyChart('chartTrend');
+            const ctx = document.getElementById('chartTrend').getContext('2d');
+            CHARTS['chartTrend'] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],
+                    datasets: [
+                        { label: 'Dealing', data: Object.values(monthlyData).map(m => m.dealing), borderColor: '#4472C4', backgroundColor: 'rgba(68,114,196,0.1)', fill: true, tension: 0.4, borderWidth: 3, pointRadius: 5 },
+                        { label: 'DO (Lunas)', data: Object.values(monthlyData).map(m => m.do), borderColor: '#28A745', backgroundColor: 'rgba(40,167,69,0.1)', fill: true, tension: 0.4, borderWidth: 3, pointRadius: 5 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
+            });
+        }
+
+        function updateStatusChart() {
+            const statusCount = { LUNAS: 0, PENDING: 0, CANCEL: 0, REFUND: 0 };
+            FILTERED_DATA.forEach(d => {
+                if (d.status === 'LUNAS' || d.status === 'LUNAS PENARIK') statusCount.LUNAS++;
+                else if (d.status === 'PENDING' || d.status === 'ON PROGRESS') statusCount.PENDING++;
+                else if (d.status === 'CANCEL') statusCount.CANCEL++;
+                else if (d.status === 'REFUND') statusCount.REFUND++;
+            });
+
+            destroyChart('chartStatus');
+            const ctx = document.getElementById('chartStatus').getContext('2d');
+            CHARTS['chartStatus'] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Lunas', 'Pending', 'Cancel', 'Refund'],
+                    datasets: [{ data: [statusCount.LUNAS, statusCount.PENDING, statusCount.CANCEL, statusCount.REFUND], backgroundColor: ['#28A745', '#FFC107', '#DC3545', '#6F42C1'], borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'right' } } }
+            });
+        }
+
+        function updateOmsetChart() {
+            const monthlyOmset = {};
+            for (let i = 1; i <= 12; i++) monthlyOmset[i] = 0;
+            
+            FILTERED_DATA.filter(d => d.status === 'LUNAS' || d.status === 'LUNAS PENARIK').forEach(d => {
+                const bulan = d.bulanLunas || d.bulanDealing;
+                if (bulan >= 1 && bulan <= 12) {
+                    monthlyOmset[bulan] += (parseFloat(d.omset) || 0) / 1000000; // Convert to millions
+                }
+            });
+
+            destroyChart('chartOmset');
+            const ctx = document.getElementById('chartOmset').getContext('2d');
+            CHARTS['chartOmset'] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],
+                    datasets: [{ label: 'Omset (Juta)', data: Object.values(monthlyOmset), backgroundColor: '#6F42C1', borderRadius: 6 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
+            });
+        }
+
+        function updateAlerts() {
+            // Hot Deals - Target bulan ini (dari kolom TARGET LUNAS / kolom E)
+            const currentMonth = new Date().getMonth() + 1;
+            const hotDeals = FILTERED_DATA.filter(d => {
+                if (!d.targetLunas) return false;
+                const targetMonth = getMonthFromDate(d.targetLunas);
+                return targetMonth === currentMonth;
+            });
+
+            let hotHTML = '';
+            if (hotDeals.length > 0) {
+                hotDeals.slice(0, 10).forEach(d => {
+                    const isLunas = d.status === 'LUNAS' || d.status === 'LUNAS PENARIK';
+                    hotHTML += `<div class="alert-item ${isLunas ? 'lunas' : ''}"><strong>${d.mitra}</strong> - ${d.brand} (${d.ae}) ${isLunas ? '<span style="color:var(--success);font-weight:700;">✓ LUNAS</span>' : '- Target: ' + d.targetLunas}</div>`;
+                });
+            } else {
+                hotHTML = '<div class="no-data">Tidak ada hot deals bulan ini</div>';
+            }
+            document.getElementById('hotList').innerHTML = hotHTML;
+            document.getElementById('hotCount').textContent = hotDeals.length;
+
+            // Risk Deals - Pending > 21 hari
+            const today = new Date();
+            const riskDeals = FILTERED_DATA.filter(d => {
+                if (d.status !== 'PENDING' && d.status !== 'ON PROGRESS') return false;
+                if (!d.tanggalDealing) return false;
+                const parts = d.tanggalDealing.split('/');
+                if (parts.length < 3) return false;
+                const dealDate = new Date(2000 + parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+                const diffDays = Math.floor((today - dealDate) / (1000 * 60 * 60 * 24));
+                d.agingDays = diffDays;
+                return diffDays > 21;
+            }).sort((a, b) => b.agingDays - a.agingDays);
+
+            let riskHTML = '';
+            if (riskDeals.length > 0) {
+                riskDeals.slice(0, 10).forEach(d => {
+                    riskHTML += `<div class="alert-item"><strong>${d.mitra}</strong> - ${d.brand} (${d.ae}) - ${d.agingDays} hari</div>`;
+                });
+            } else {
+                riskHTML = '<div class="no-data">Tidak ada dealing at risk</div>';
+            }
+            document.getElementById('riskList').innerHTML = riskHTML;
+            document.getElementById('riskCount').textContent = riskDeals.length;
+        }
+
+        function updateTopAETable() {
+            const aeStats = {};
+            FILTERED_DATA.forEach(d => {
+                if (!d.ae) return;
+                if (!aeStats[d.ae]) aeStats[d.ae] = { dealing: 0, do: 0, omset: 0 };
+                aeStats[d.ae].dealing++;
+                if (d.status === 'LUNAS' || d.status === 'LUNAS PENARIK') {
+                    aeStats[d.ae].do++;
+                    aeStats[d.ae].omset += parseFloat(d.omset) || 0;
+                }
+            });
+
+            const sorted = Object.entries(aeStats).map(([name, stats]) => ({
+                name, ...stats, convRate: calcConvRate(stats.dealing, stats.do)
+            })).sort((a, b) => b.omset - a.omset).slice(0, 10);
+
+            let html = '';
+            sorted.forEach((ae, i) => {
+                const rank = i + 1;
+                const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-default';
+                html += `<tr><td><div class="rank-badge ${rankClass}">${rank}</div></td><td><strong>${ae.name}</strong></td><td>${ae.dealing}</td><td>${ae.do}</td><td style="color:var(--success);font-weight:600;">${formatRupiah(ae.omset)}</td><td style="color:${ae.convRate >= 50 ? 'var(--success)' : ae.convRate >= 30 ? '#856404' : 'var(--danger)'};">${ae.convRate}%</td></tr>`;
+            });
+            document.getElementById('topAETable').innerHTML = html || '<tr><td colspan="6" class="no-data">Tidak ada data</td></tr>';
+        }
+
+        // ============================================
+        // AE TAB
+        // ============================================
+        function updateAETab() {
+            const aeStats = {};
+            FILTERED_DATA.forEach(d => {
+                if (!d.ae) return;
+                if (!aeStats[d.ae]) aeStats[d.ae] = { dealing: 0, do: 0, omset: 0 };
+                aeStats[d.ae].dealing++;
+                if (d.status === 'LUNAS' || d.status === 'LUNAS PENARIK') {
+                    aeStats[d.ae].do++;
+                    aeStats[d.ae].omset += parseFloat(d.omset) || 0;
+                }
+            });
+
+            // Calculate scores
+            const maxOmset = Math.max(...Object.values(aeStats).map(s => s.omset), 1);
+            const sorted = Object.entries(aeStats).map(([name, stats]) => ({
+                name, ...stats, 
+                convRate: calcConvRate(stats.dealing, stats.do),
+                score: Math.round((stats.omset / maxOmset) * 100)
+            })).sort((a, b) => b.omset - a.omset);
+
+            // Update table
+            let html = '';
+            sorted.forEach((ae, i) => {
+                const rank = i + 1;
+                const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-default';
+                html += `<tr><td><div class="rank-badge ${rankClass}">${rank}</div></td><td><strong>${ae.name}</strong></td><td>${ae.dealing}</td><td>${ae.do}</td><td style="color:var(--success);font-weight:600;">${formatRupiah(ae.omset)}</td><td style="color:${ae.convRate >= 50 ? 'var(--success)' : ae.convRate >= 30 ? '#856404' : 'var(--danger)'};">${ae.convRate}%</td><td><div class="score-display"><span class="score-value">${ae.score}</span><div class="score-bar"><div class="score-fill" style="width:${ae.score}%;"></div></div></div></td></tr>`;
+            });
+            document.getElementById('aeRankingTable').innerHTML = html || '<tr><td colspan="7" class="no-data">Tidak ada data</td></tr>';
+
+            // Update charts
+            const top8 = sorted.slice(0, 8);
+            
+            destroyChart('chartAEDealing');
+            CHARTS['chartAEDealing'] = new Chart(document.getElementById('chartAEDealing'), {
+                type: 'bar',
+                data: { labels: top8.map(a => a.name), datasets: [{ data: top8.map(a => a.dealing), backgroundColor: '#4472C4', borderRadius: 6 }] },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
+            });
+
+            destroyChart('chartAEOmset');
+            CHARTS['chartAEOmset'] = new Chart(document.getElementById('chartAEOmset'), {
+                type: 'bar',
+                data: { labels: top8.map(a => a.name), datasets: [{ data: top8.map(a => a.omset / 1000000), backgroundColor: '#28A745', borderRadius: 6 }] },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
+            });
+        }
+
+        // ============================================
+        // CHANNEL TAB
+        // ============================================
+        function updateChannelTab() {
+            let pameran = 0, digital = 0, kuncian = 0, komitmen = 0;
+            const dmStats = {};
+            DM_LIST.forEach(dm => dmStats[dm] = { dealing: 0, do: 0, omset: 0 });
+
+            FILTERED_DATA.forEach(d => {
+            if (d.data === 'PAMERAN' || d.data === 'PRIBADI') {
+            pameran++;
+            dmStats[d.data].dealing++;
+            if (d.status === 'LUNAS' || d.status === 'LUNAS PENARIK') {
+            dmStats[d.data].do++;
+            dmStats[d.data].omset += parseFloat(d.omset) || 0;
+        }
+    }
+            else if (DM_LIST.includes(d.data)) {
+            digital++;
+            dmStats[d.data].dealing++;
+                    dmStats[d.data].dealing++;
+                    if (d.status === 'LUNAS' || d.status === 'LUNAS PENARIK') {
+                        dmStats[d.data].do++;
+                        dmStats[d.data].omset += parseFloat(d.omset) || 0;
+                    }
+                }
+
+                const kom = parseFloat(d.komitmen) || 0;
+                if (kom < 10000000) kuncian++;
+                else komitmen++;
+            });
+
+            document.getElementById('channelKPI').innerHTML = `
+                <div class="kpi-card"><div class="kpi-icon">📍</div><div class="kpi-label">Pameran/Pribadi</div><div class="kpi-value">${pameran}</div><div class="kpi-change">${FILTERED_DATA.length > 0 ? Math.round(pameran/FILTERED_DATA.length*100) : 0}% dari total</div></div>
+                <div class="kpi-card success"><div class="kpi-icon">💻</div><div class="kpi-label">Digital Marketing</div><div class="kpi-value">${digital}</div><div class="kpi-change">${FILTERED_DATA.length > 0 ? Math.round(digital/FILTERED_DATA.length*100) : 0}% dari total</div></div>
+                <div class="kpi-card warning"><div class="kpi-icon">🔒</div><div class="kpi-label">Dana Kuncian (&lt;10jt)</div><div class="kpi-value">${kuncian}</div><div class="kpi-change">${FILTERED_DATA.length > 0 ? Math.round(kuncian/FILTERED_DATA.length*100) : 0}% dari dealing</div></div>
+                <div class="kpi-card purple"><div class="kpi-icon">💎</div><div class="kpi-label">Dana Komitmen (≥10jt)</div><div class="kpi-value">${komitmen}</div><div class="kpi-change">${FILTERED_DATA.length > 0 ? Math.round(komitmen/FILTERED_DATA.length*100) : 0}% dari dealing</div></div>
+            `;
+
+            // Charts
+            destroyChart('chartChannel');
+            CHARTS['chartChannel'] = new Chart(document.getElementById('chartChannel'), {
+                type: 'doughnut',
+                data: { labels: ['Pameran/Pribadi', 'Digital Marketing'], datasets: [{ data: [pameran, digital], backgroundColor: ['#FFC107', '#4472C4'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'bottom' } } }
+            });
+
+            destroyChart('chartDanaType');
+            CHARTS['chartDanaType'] = new Chart(document.getElementById('chartDanaType'), {
+                type: 'bar',
+                data: { labels: ['Dana Kuncian (<10jt)', 'Dana Komitmen (≥10jt)'], datasets: [{ label: 'Total', data: [kuncian, komitmen], backgroundColor: ['#FFC107', '#28A745'], borderRadius: 6 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // DM Table
+            let dmHTML = '';
+            DM_LIST.forEach(dm => {
+                const s = dmStats[dm];
+                const conv = calcConvRate(s.dealing, s.do);
+                dmHTML += `<tr><td><strong>${dm}</strong></td><td>${s.dealing}</td><td>${s.do}</td><td style="color:${conv >= 50 ? 'var(--success)' : conv >= 30 ? '#856404' : 'var(--danger)'};">${conv}%</td><td>${formatRupiah(s.omset)}</td></tr>`;
+            });
+            document.getElementById('dmTable').innerHTML = dmHTML;
+        }
+
+        // ============================================
+        // BRAND TAB
+        // ============================================
+        function updateBrandTab() {
+            const brandStats = {};
+            FILTERED_DATA.forEach(d => {
+                if (!d.brand) return;
+                if (!brandStats[d.brand]) brandStats[d.brand] = { dealing: 0, do: 0, omset: 0 };
+                brandStats[d.brand].dealing++;
+                if (d.status === 'LUNAS' || d.status === 'LUNAS PENARIK') {
+                    brandStats[d.brand].do++;
+                    brandStats[d.brand].omset += parseFloat(d.omset) || 0;
+                }
+            });
+
+            const sorted = Object.entries(brandStats).map(([name, stats]) => ({
+                name, ...stats, convRate: calcConvRate(stats.dealing, stats.do), avgDeal: stats.do > 0 ? stats.omset / stats.do : 0
+            })).sort((a, b) => b.dealing - a.dealing);
+
+            // Top 3 KPI
+            const top3 = sorted.slice(0, 3);
+            const icons = ['🍽️', '☕', '🍜', '🌶️', '🥘', '💈'];
+            document.getElementById('brandKPI').innerHTML = top3.map((b, i) => `
+                <div class="kpi-card ${i === 0 ? '' : i === 1 ? 'success' : 'purple'}"><div class="kpi-icon">${icons[i] || '🏷️'}</div><div class="kpi-label">${b.name}</div><div class="kpi-value">${b.dealing}</div><div class="kpi-change">${FILTERED_DATA.length > 0 ? Math.round(b.dealing/FILTERED_DATA.length*100) : 0}% dari total</div></div>
+            `).join('');
+
+            // Charts
+            destroyChart('chartBrandDealing');
+            CHARTS['chartBrandDealing'] = new Chart(document.getElementById('chartBrandDealing'), {
+                type: 'doughnut',
+                data: { labels: sorted.map(b => b.name), datasets: [{ data: sorted.map(b => b.dealing), backgroundColor: ['#4472C4', '#28A745', '#FFC107', '#DC3545', '#6F42C1', '#E83E8C', '#6C757D'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'right' } } }
+            });
+
+            destroyChart('chartBrandOmset');
+            CHARTS['chartBrandOmset'] = new Chart(document.getElementById('chartBrandOmset'), {
+                type: 'bar',
+                data: { labels: sorted.map(b => b.name), datasets: [{ data: sorted.map(b => b.omset / 1000000), backgroundColor: ['#4472C4', '#28A745', '#FFC107', '#DC3545', '#6F42C1', '#E83E8C'], borderRadius: 6 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // Table
+            let html = '';
+            sorted.forEach(b => {
+                html += `<tr><td><strong>${b.name}</strong></td><td>${b.dealing}</td><td>${b.do}</td><td style="color:${b.convRate >= 50 ? 'var(--success)' : b.convRate >= 30 ? '#856404' : 'var(--danger)'};">${b.convRate}%</td><td>${formatRupiah(b.omset)}</td><td>${formatRupiah(b.avgDeal)}</td></tr>`;
+            });
+            document.getElementById('brandTable').innerHTML = html || '<tr><td colspan="6" class="no-data">Tidak ada data</td></tr>';
+        }
+
+        // ============================================
+        // VELOCITY TAB
+        // ============================================
+        function updateVelocityTab() {
+            const lunasWithDays = FILTERED_DATA.filter(d => (d.status === 'LUNAS' || d.status === 'LUNAS PENARIK') && d.lagDealingDO != null);
+            const days = lunasWithDays.map(d => parseInt(d.lagDealingDO) || 0).filter(d => d >= 0);
+            
+            const avgDays = days.length > 0 ? Math.round(days.reduce((a, b) => a + b, 0) / days.length) : 0;
+            const minDays = days.length > 0 ? Math.min(...days) : 0;
+            const maxDays = days.length > 0 ? Math.max(...days) : 0;
+            const medianDays = days.length > 0 ? days.sort((a, b) => a - b)[Math.floor(days.length / 2)] : 0;
+
+            document.getElementById('velocityKPI').innerHTML = `
+                <div class="kpi-card"><div class="kpi-icon">⏱️</div><div class="kpi-label">Avg Days to DO</div><div class="kpi-value">${avgDays}</div><div class="kpi-change">Target: &lt;30 hari</div></div>
+                <div class="kpi-card success"><div class="kpi-icon">🚀</div><div class="kpi-label">Fastest Deal</div><div class="kpi-value">${minDays} hari</div><div class="kpi-change positive">Best performance</div></div>
+                <div class="kpi-card danger"><div class="kpi-icon">🐢</div><div class="kpi-label">Slowest Deal</div><div class="kpi-value">${maxDays} hari</div><div class="kpi-change negative">Needs attention</div></div>
+                <div class="kpi-card warning"><div class="kpi-icon">📊</div><div class="kpi-label">Median Days</div><div class="kpi-value">${medianDays}</div><div class="kpi-change">${medianDays <= 30 ? 'Healthy' : 'Slow'}</div></div>
+            `;
+
+            // Aging chart (PENDING only)
+            const today = new Date();
+            const aging = { '0-7': 0, '8-14': 0, '15-30': 0, '>30': 0 };
+            FILTERED_DATA.filter(d => d.status === 'PENDING' || d.status === 'ON PROGRESS').forEach(d => {
+                if (!d.tanggalDealing) return;
+                const parts = d.tanggalDealing.split('/');
+                if (parts.length < 3) return;
+                const dealDate = new Date(2000 + parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+                const diff = Math.floor((today - dealDate) / (1000 * 60 * 60 * 24));
+                if (diff <= 7) aging['0-7']++;
+                else if (diff <= 14) aging['8-14']++;
+                else if (diff <= 30) aging['15-30']++;
+                else aging['>30']++;
+            });
+
+            destroyChart('chartAging');
+            CHARTS['chartAging'] = new Chart(document.getElementById('chartAging'), {
+                type: 'bar',
+                data: { labels: ['0-7 hari', '8-14 hari', '15-30 hari', '>30 hari'], datasets: [{ data: Object.values(aging), backgroundColor: ['#28A745', '#FFC107', '#FD7E14', '#DC3545'], borderRadius: 8 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // Deal size distribution
+            const dealSize = { '<50jt': 0, '50-100jt': 0, '100-200jt': 0, '>200jt': 0 };
+            FILTERED_DATA.filter(d => d.status === 'LUNAS' || d.status === 'LUNAS PENARIK').forEach(d => {
+                const omset = parseFloat(d.omset) || 0;
+                if (omset < 50000000) dealSize['<50jt']++;
+                else if (omset < 100000000) dealSize['50-100jt']++;
+                else if (omset < 200000000) dealSize['100-200jt']++;
+                else dealSize['>200jt']++;
+            });
+
+            destroyChart('chartDealSize');
+            CHARTS['chartDealSize'] = new Chart(document.getElementById('chartDealSize'), {
+                type: 'doughnut',
+                data: { labels: Object.keys(dealSize), datasets: [{ data: Object.values(dealSize), backgroundColor: ['#6C757D', '#FFC107', '#4472C4', '#28A745'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'right' } } }
+            });
+
+            // Velocity per AE
+            const aeVelocity = {};
+            lunasWithDays.forEach(d => {
+                if (!d.ae) return;
+                if (!aeVelocity[d.ae]) aeVelocity[d.ae] = [];
+                aeVelocity[d.ae].push(parseInt(d.lagDealingDO) || 0);
+            });
+
+            let velHTML = '';
+            Object.entries(aeVelocity).forEach(([ae, daysList]) => {
+                const avg = Math.round(daysList.reduce((a, b) => a + b, 0) / daysList.length);
+                const min = Math.min(...daysList);
+                const max = Math.max(...daysList);
+                const perf = avg <= 20 ? 'green' : avg <= 35 ? 'yellow' : 'red';
+                const perfWidth = Math.max(10, 100 - avg);
+                velHTML += `<tr><td><strong>${ae}</strong></td><td>${avg} hari</td><td>${min} hari</td><td>${max} hari</td><td><div class="progress-bar" style="width:100px;"><div class="progress-fill ${perf}" style="width:${perfWidth}%;"></div></div></td></tr>`;
+            });
+            document.getElementById('velocityTable').innerHTML = velHTML || '<tr><td colspan="5" class="no-data">Tidak ada data</td></tr>';
+        }
+
+        // ============================================
+        // FORECAST TAB
+        // ============================================
+        function updateForecastTab() {
+            const totalTarget = MONTH_TARGETS.reduce((a, b) => a + b, 0);
+            const lunasData = FILTERED_DATA.filter(d => d.status === 'LUNAS' || d.status === 'LUNAS PENARIK');
+            const realized = lunasData.reduce((sum, d) => sum + (parseFloat(d.omset) || 0), 0);
+            const pendingData = FILTERED_DATA.filter(d => d.status === 'PENDING' || d.status === 'ON PROGRESS');
+            const pipeline = pendingData.reduce((sum, d) => sum + (parseFloat(d.omset) || parseFloat(d.komitmen) || 0), 0);
+            const convRate = FILTERED_DATA.length > 0 ? lunasData.length / FILTERED_DATA.length : 0;
+            const projected = realized + (pipeline * convRate);
+
+            document.getElementById('forecastKPI').innerHTML = `
+                <div class="kpi-card"><div class="kpi-icon">🎯</div><div class="kpi-label">Target YTD</div><div class="kpi-value">Rp ${totalTarget/1000}M</div><div class="kpi-change">Annual Target</div></div>
+                <div class="kpi-card success"><div class="kpi-icon">✅</div><div class="kpi-label">Realized</div><div class="kpi-value">${formatRupiah(realized)}</div><div class="kpi-change positive">${totalTarget > 0 ? Math.round(realized/totalTarget/10000) : 0}% Achievement</div></div>
+                <div class="kpi-card warning"><div class="kpi-icon">📊</div><div class="kpi-label">Pipeline</div><div class="kpi-value">${formatRupiah(pipeline)}</div><div class="kpi-change">${pendingData.length} Pending Deals</div></div>
+                <div class="kpi-card purple"><div class="kpi-icon">📈</div><div class="kpi-label">Projected</div><div class="kpi-value">${formatRupiah(projected)}</div><div class="kpi-change">Realized + Pipeline×Conv</div></div>
+            `;
+
+            // Gap chart
+            const monthlyRealized = {};
+            for (let i = 1; i <= 12; i++) monthlyRealized[i] = 0;
+            lunasData.forEach(d => {
+                const bulan = d.bulanLunas || d.bulanDealing;
+                if (bulan >= 1 && bulan <= 12) monthlyRealized[bulan] += (parseFloat(d.omset) || 0) / 1000000;
+            });
+
+            destroyChart('chartGapTarget');
+            CHARTS['chartGapTarget'] = new Chart(document.getElementById('chartGapTarget'), {
+                type: 'bar',
+                data: {
+                    labels: ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],
+                    datasets: [
+                        { label: 'Target', data: MONTH_TARGETS.slice(1), backgroundColor: 'rgba(108,117,125,0.3)', borderRadius: 4 },
+                        { label: 'Realisasi', data: Object.values(monthlyRealized), backgroundColor: '#4472C4', borderRadius: 4 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+            });
+
+            // Pipeline analysis
+            const today = new Date();
+            const pipelineHeat = { hot: 0, warm: 0, cold: 0 };
+            pendingData.forEach(d => {
+                if (!d.tanggalDealing) { pipelineHeat.cold++; return; }
+                const parts = d.tanggalDealing.split('/');
+                if (parts.length < 3) { pipelineHeat.cold++; return; }
+                const dealDate = new Date(2000 + parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+                const diff = Math.floor((today - dealDate) / (1000 * 60 * 60 * 24));
+                if (diff <= 7) pipelineHeat.hot++;
+                else if (diff <= 30) pipelineHeat.warm++;
+                else pipelineHeat.cold++;
+            });
+
+            destroyChart('chartPipeline');
+            CHARTS['chartPipeline'] = new Chart(document.getElementById('chartPipeline'), {
+                type: 'doughnut',
+                data: { labels: ['Hot (<7d)', 'Warm (7-30d)', 'Cold (>30d)'], datasets: [{ data: [pipelineHeat.hot, pipelineHeat.warm, pipelineHeat.cold], backgroundColor: ['#DC3545', '#FFC107', '#4472C4'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'right' } } }
+            });
+
+            // Conv rate trend
+            const monthlyConv = {};
+            for (let i = 1; i <= 12; i++) monthlyConv[i] = { dealing: 0, do: 0 };
+            FILTERED_DATA.forEach(d => {
+                const bulan = d.bulanDealing;
+                if (bulan >= 1 && bulan <= 12) {
+                    monthlyConv[bulan].dealing++;
+                    if (d.status === 'LUNAS' || d.status === 'LUNAS PENARIK') monthlyConv[bulan].do++;
+                }
+            });
+
+            destroyChart('chartConvTrend');
+            CHARTS['chartConvTrend'] = new Chart(document.getElementById('chartConvTrend'), {
+                type: 'line',
+                data: {
+                    labels: ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],
+                    datasets: [{ label: 'Conv Rate %', data: Object.values(monthlyConv).map(m => m.dealing > 0 ? Math.round(m.do / m.dealing * 100) : 0), borderColor: '#28A745', backgroundColor: 'rgba(40,167,69,0.1)', fill: true, tension: 0.4, borderWidth: 3, pointRadius: 5 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 150, ticks: { callback: v => v + '%' } } } }
+            });
+
+            // Quarter table
+            const quarters = [
+                { name: 'Q1', months: [1, 2, 3], target: MONTH_TARGETS[1] + MONTH_TARGETS[2] + MONTH_TARGETS[3] },
+                { name: 'Q2', months: [4, 5, 6], target: MONTH_TARGETS[4] + MONTH_TARGETS[5] + MONTH_TARGETS[6] },
+                { name: 'Q3', months: [7, 8, 9], target: MONTH_TARGETS[7] + MONTH_TARGETS[8] + MONTH_TARGETS[9] },
+                { name: 'Q4', months: [10, 11, 12], target: MONTH_TARGETS[10] + MONTH_TARGETS[11] + MONTH_TARGETS[12] }
+            ];
+
+            let qHTML = '';
+            quarters.forEach(q => {
+                const qData = FILTERED_DATA.filter(d => q.months.includes(d.bulanDealing));
+                const qLunas = qData.filter(d => d.status === 'LUNAS' || d.status === 'LUNAS PENARIK');
+                const qOmset = qLunas.reduce((sum, d) => sum + (parseFloat(d.omset) || 0), 0);
+                const qConv = calcConvRate(qData.length, qLunas.length);
+                const qAchieve = q.target > 0 ? Math.round(qOmset / q.target / 10000) : 0;
+                const perfClass = qAchieve >= 80 ? 'green' : qAchieve >= 50 ? 'yellow' : 'red';
+                qHTML += `<tr><td><strong>${q.name}</strong></td><td>${qData.length}</td><td>${qLunas.length}</td><td style="color:${qConv >= 50 ? 'var(--success)' : qConv >= 30 ? '#856404' : 'var(--danger)'};">${qConv}%</td><td>${formatRupiah(qOmset)}</td><td>Rp ${q.target} jt</td><td><div class="progress-bar" style="width:80px;display:inline-block;"><div class="progress-fill ${perfClass}" style="width:${Math.min(qAchieve, 100)}%;"></div></div> ${qAchieve}%</td></tr>`;
+            });
+            document.getElementById('quarterTable').innerHTML = qHTML;
+        }
+
+        // ============================================
+        // EXTERNAL DATA LOADER (Called from GAS)
+        // ============================================
+        window.loadExternalData = function(data) {
+            onDataLoaded(data);
+        };
+    </script>
+</body>
+</html>
